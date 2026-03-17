@@ -1,3 +1,4 @@
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || ''
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import axios from 'axios'
 
