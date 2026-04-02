@@ -22,7 +22,7 @@ export default function Footer() {
             </p>
             <div className="flex gap-3">
               {[Twitter, Instagram, Github].map((Icon, i) => (
-                <button key={i} style={{ background: 'rgba(255,255,255,0.06)' }}
+                <button key={i} 
                   className="w-9 h-9 rounded-xl flex items-center justify-center hover:opacity-100 transition-opacity"
                   style={{ background: 'rgba(93,173,226,0.12)', color: '#AED6F1' }}>
                   <Icon size={15} />

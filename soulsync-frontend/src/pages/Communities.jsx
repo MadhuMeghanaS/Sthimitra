@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Users, ArrowUp, MessageCircle, Plus, X, Search, Pin, Loader2 } from 'lucide-react'
+import { Users, ArrowUp, MessageCircle, Plus, X, Search, Pin, Loader2, ShieldCheck, Heart, AlertCircle } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/AuthModal'
@@ -7,14 +8,14 @@ import toast from 'react-hot-toast'
 
 // ── All community and post data — identical to v2 ────────────────────────────
 const communities = [
-  { id: 1, name: 'Academic Stress',    emoji: '📚', memberCount: 2340, color: '#5DADE2', description: 'For students navigating exams, deadlines, and academic pressure. Share strategies and find encouragement.' },
-  { id: 2, name: 'Work Stress',        emoji: '💼', memberCount: 3150, color: '#A29BFE', description: 'Support for workplace burnout, difficult managers, toxic environments, and career anxiety.' },
-  { id: 3, name: 'Relationship Stress',emoji: '💔', memberCount: 1870, color: '#E74C3C', description: 'Navigate the complexities of love, family bonds, and interpersonal struggles with compassion.' },
-  { id: 4, name: 'Anxiety Support',    emoji: '🌊', memberCount: 4200, color: '#5DADE2', description: 'A safe, non-judgmental space for those living with anxiety disorders and panic attacks.' },
-  { id: 5, name: 'Depression Support', emoji: '🌱', memberCount: 3600, color: '#27AE60', description: 'Compassionate community for people dealing with depression and persistent low mood.' },
-  { id: 6, name: 'Career Pressure',    emoji: '🎯', memberCount: 1540, color: '#F39C12', description: 'For those feeling lost, pressured, or overwhelmed with career decisions and job searching.' },
-  { id: 7, name: 'Mindfulness Circle', emoji: '🧘', memberCount: 2800, color: '#55E6C1', description: 'Share meditation tips, mindfulness journeys, and peaceful daily reflections.' },
-  { id: 8, name: 'Parenting Stress',   emoji: '👨‍👩‍👧', memberCount: 1200, color: '#E91E8C', description: 'For parents navigating the joys and very real challenges of raising children.' },
+  { id: 1, name: 'Academic Stress',    emoji: '📚', memberCount: 2340, color: '#4F46E5', description: 'For students navigating exams, deadlines, and academic pressure. Share strategies and find encouragement.' },
+  { id: 2, name: 'Work Stress',        emoji: '💼', memberCount: 3150, color: '#0F172A', description: 'Support for workplace burnout, difficult managers, toxic environments, and career anxiety.' },
+  { id: 3, name: 'Relationship Stress',emoji: '💔', memberCount: 1870, color: '#EF4444', description: 'Navigate the complexities of love, family bonds, and interpersonal struggles with compassion.' },
+  { id: 4, name: 'Anxiety Support',    emoji: '🌊', memberCount: 4200, color: '#3B82F6', description: 'A safe, non-judgmental space for those living with anxiety disorders and panic attacks.' },
+  { id: 5, name: 'Depression Support', emoji: '🌱', memberCount: 3600, color: '#10B981', description: 'Compassionate community for people dealing with depression and persistent low mood.' },
+  { id: 6, name: 'Career Pressure',    emoji: '🎯', memberCount: 1540, color: '#F59E0B', description: 'For those feeling lost, pressured, or overwhelmed with career decisions and job searching.' },
+  { id: 7, name: 'Mindfulness Circle', emoji: '🧘', memberCount: 2800, color: '#06B6D4', description: 'Share meditation tips, mindfulness journeys, and peaceful daily reflections.' },
+  { id: 8, name: 'Parenting Stress',   emoji: '👨‍👩‍👧', memberCount: 1200, color: '#EC4899', description: 'For parents navigating the joys and very real challenges of raising children.' },
 ]
 
 const seedPosts = {
@@ -44,7 +45,6 @@ const defaultPosts = [
 export default function Communities() {
   const { user, refreshUser } = useAuth()
 
-  // Initialise joined from user's DB data (joinedCommunities populated as objects)
   const getInitialJoined = () => {
     if (!user?.joinedCommunities?.length) return new Set()
     const names = new Set((user.joinedCommunities).map(c => typeof c === 'object' ? c.name : c))
@@ -52,7 +52,7 @@ export default function Communities() {
   }
 
   const [joined,           setJoined]           = useState(getInitialJoined)
-  const [joiningId,        setJoiningId]        = useState(null)   // community id being toggled
+  const [joiningId,        setJoiningId]        = useState(null)
   const [activeId,         setActiveId]         = useState(null)
   const [posts,            setPosts]            = useState(seedPosts)
   const [upvoted,          setUpvoted]          = useState(new Set())
@@ -71,7 +71,6 @@ export default function Communities() {
     .slice()
     .sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0))
 
-  // ── Join / leave — saves to DB and syncs Profile ─────────────────────────
   const handleJoin = async (id, e) => {
     e.stopPropagation()
     if (!user) { setShowAuth(true); return }
@@ -80,7 +79,6 @@ export default function Communities() {
     const community = communities.find(c => c.id === id)
     setJoiningId(id)
 
-    // Optimistic UI
     setJoined(prev => {
       const next = new Set(prev)
       isJoined ? next.delete(id) : next.add(id)
@@ -88,7 +86,6 @@ export default function Communities() {
     })
 
     try {
-      // Try real backend (works if community is seeded with matching name)
       await axios.post('/api/communities/join-by-name', {
         name:        community.name,
         emoji:       community.emoji,
@@ -98,9 +95,8 @@ export default function Communities() {
         action:      isJoined ? 'leave' : 'join',
       })
       toast.success(isJoined ? `Left "${community.name}"` : `Joined "${community.name}"! 💙`)
-      await refreshUser()   // Profile → Communities tab updates immediately
+      await refreshUser()
     } catch {
-      // Fallback: store in localStorage so Profile still shows it
       const key    = `soulsync_communities_${user._id || user.id}`
       const stored = JSON.parse(localStorage.getItem(key) || '[]')
       if (isJoined) {
@@ -118,7 +114,6 @@ export default function Communities() {
     }
   }
 
-  // ── Upvote (local state, same as v2) ─────────────────────────────────────
   const handleUpvote = (postId) => {
     if (!user) { setShowAuth(true); return }
     setUpvoted(prev => {
@@ -128,7 +123,6 @@ export default function Communities() {
     })
   }
 
-  // ── Submit post (local, same as v2) ──────────────────────────────────────
   const submitPost = () => {
     if (!postForm.title.trim() || !postForm.content.trim()) return
     const newPost = {
@@ -148,189 +142,306 @@ export default function Communities() {
     toast.success('Post created! 🎉')
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  }
+
+  const itemVariants = {
+    hidden: { y: 10, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  }
+
   return (
-    <div className="pt-28 pb-20 min-h-screen">
+    <div className="pt-28 pb-20 min-h-screen bg-[#F8FAF8]">
       <div className="max-w-7xl mx-auto px-6">
 
-        {/* Header */}
-        <div className="mb-8">
-          <span className="tag-mint mb-3 inline-block">Communities</span>
-          <h1 className="font-display text-5xl font-bold text-soul-text mb-3">You Are Not Alone</h1>
-          <p className="text-soul-muted max-w-lg mb-2">Find your tribe. Share authentically. Heal in connection.</p>
-          {user && joined.size > 0 && (
-            <p className="text-sm mb-5">
-              <span className="text-blue-calm font-semibold">{joined.size} joined</span>
-              <span className="text-soul-muted"> — visible in your Profile → Communities tab</span>
-            </p>
-          )}
-          <div className="relative max-w-sm">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-soul-muted" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search communities..."
-              className="soul-input pl-10 text-sm" />
+        {/* Header — Hero Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
+          className="mb-12 text-center md:text-left"
+        >
+          <span className="tag-mint mb-3 inline-block">Real Support</span>
+          <h1 className="font-display text-5xl md:text-7xl font-bold text-slate-900 mb-4 tracking-tighter leading-tight">You Are Not Alone</h1>
+          <p className="text-slate-500 max-w-xl mb-0 leading-relaxed font-light text-lg">Find your tribe. Share authentically. Heal in connection.</p>
+        </motion.div>
+
+        {/* Community Guidelines — Big Boxes as requested */}
+        <div className="mb-16">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-200">
+              <ShieldCheck size={20} />
+            </div>
+            <h2 className="font-display text-2xl font-bold text-slate-900 tracking-tight uppercase">Community Safety & Values</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Heart, title: "Respect over Reaction", desc: "Be kind, even in disagreement. We nurture belonging.", color: "#4F46E5", bg: "bg-indigo-50/30" },
+              { icon: ShieldCheck, title: "Safe Space Policy", desc: "Zero tolerance for explicit, illegal, or harmful content.", color: "#0F172A", bg: "bg-slate-50/50" },
+              { icon: Users, title: "Well Behaved", desc: "Professionalism and empathy are our core requirements.", color: "#06B6D4", bg: "bg-cyan-50/30" },
+              { icon: AlertCircle, title: "Crisis Support", desc: "Use our dedicated support tools for any urgent mental health needs.", color: "#EF4444", bg: "bg-red-50/30" }
+            ].map((rule, ri) => (
+              <motion.div 
+                key={ri}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + (ri * 0.1) }}
+                whileHover={{ y: -5 }}
+                className={`p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl transition-all relative overflow-hidden ${rule.bg}`}
+              >
+                <div className="w-14 h-14 rounded-3xl mb-6 flex items-center justify-center shadow-inner bg-white border border-slate-100"
+                  style={{ color: rule.color }}>
+                  <rule.icon size={28} />
+                </div>
+                <h4 className="font-display text-lg font-bold text-slate-900 mb-3 tracking-tight leading-none uppercase">{rule.title}</h4>
+                <p className="text-sm text-slate-500 font-light leading-relaxed">{rule.desc}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Search Repositioned — Below Guidelines */}
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+          className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6"
+        >
+          <div className="relative w-full max-w-md">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search communities by name or topic..."
+              className="w-full pl-12 pr-6 py-4 rounded-2xl bg-white border border-slate-100 shadow-sm focus:shadow-indigo-500/10 focus:border-indigo-200 outline-none transition-all text-slate-600 font-medium" />
+          </div>
+          
+          {user && joined.size > 0 && (
+            <p className="text-sm font-medium text-slate-400 italic">
+              Currently a member of <span className="text-indigo-600 font-bold">{joined.size} circles</span>
+            </p>
+          )}
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-8">
 
           {/* ── Community list ───────────────────────────────────────── */}
-          <div className="lg:col-span-4 xl:col-span-3 space-y-2.5">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="space-y-3"
+          >
             {filtered.map(c => {
               const isJoined = joined.has(c.id)
-              const isBusy   = joiningId === c.id
               return (
-                <div key={c.id} onClick={() => setActiveId(c.id)}
-                  className={`cursor-pointer rounded-xl p-4 border-2 transition-all ${
-                    activeId === c.id ? 'border-blue-calm bg-blue-pale' : 'bg-white border-soul-border hover:border-blue-light'
-                  }`}>
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl mt-0.5">{c.emoji}</span>
+                <motion.div 
+                  key={c.id} 
+                  variants={itemVariants}
+                  whileHover={{ x: 4 }}
+                  onClick={() => setActiveId(c.id)}
+                  className={`group cursor-pointer rounded-2xl p-4 border-2 transition-all shadow-sm ${
+                    activeId === c.id 
+                      ? 'border-indigo-600 bg-white shadow-md' 
+                      : 'border-white bg-white/40 hover:bg-white hover:border-slate-200'
+                  }`}
+                  style={{ borderColor: activeId === c.id ? c.color : undefined }}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shadow-sm backdrop-blur-md bg-slate-50 border border-slate-100 group-hover:scale-110 transition-transform">
+                      {c.emoji}
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <p className="font-semibold text-soul-text text-sm leading-tight">{c.name}</p>
-                        <button
-                          onClick={e => handleJoin(c.id, e)}
-                          disabled={isBusy}
-                          className={`flex-shrink-0 text-xs px-3 py-1 rounded-lg font-semibold transition-all disabled:opacity-60 flex items-center gap-1 ${
-                            isJoined ? 'bg-blue-pale text-blue-dark border border-blue-light' : 'text-white'
-                          }`}
-                          style={!isJoined ? { background: c.color } : {}}>
-                          {isBusy
-                            ? <Loader2 size={11} className="animate-spin" />
-                            : isJoined ? '✓ Joined' : 'Join'
-                          }
-                        </button>
-                      </div>
-                      <p className="text-xs text-soul-muted line-clamp-2 leading-relaxed">{c.description}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        <Users size={11} className="text-soul-muted" />
-                        <span className="text-xs text-soul-muted">{c.memberCount.toLocaleString()} members</span>
+                      <h3 className="font-display font-bold text-slate-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight text-[13px] truncate">{c.name}</h3>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Users size={10} className="text-slate-400" />
+                        <span className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">{c.memberCount.toLocaleString()}</span>
+                        {isJoined && <span className="w-1 h-1 rounded-full bg-indigo-500 ml-1" />}
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               )
             })}
-          </div>
+          </motion.div>
 
           {/* ── Post panel ───────────────────────────────────────────── */}
-          <div className="lg:col-span-8 xl:col-span-9">
-            {activeId ? (
-              <div className="space-y-4">
-                {/* Community banner */}
-                <div className="bg-white rounded-2xl p-5 border border-soul-border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{activeCommunity?.emoji}</span>
-                    <div>
-                      <h2 className="font-display text-xl font-bold text-soul-text">{activeCommunity?.name}</h2>
-                      <p className="text-xs text-soul-muted">{activeCommunity?.memberCount?.toLocaleString()} members</p>
-                    </div>
-                  </div>
-                  <button onClick={() => { if (!user) { setShowAuth(true); return } setShowNewPost(true) }}
-                    className="btn-soul px-4 py-2.5 rounded-xl text-sm flex items-center gap-2 whitespace-nowrap">
-                    <span className="flex items-center gap-1.5 relative z-10">
-                      <Plus size={14} /> New Post
-                    </span>
-                  </button>
-                </div>
-
-                {/* New post form */}
-                {showNewPost && (
-                  <div className="bg-white rounded-2xl p-6 border-2 border-blue-calm animate-slide-up">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-semibold text-soul-text">Create a Post</h3>
-                      <button onClick={() => setShowNewPost(false)} className="p-1.5 rounded-lg text-soul-muted hover:bg-soul-bg">
-                        <X size={16} />
-                      </button>
-                    </div>
-                    <input value={postForm.title}
-                      onChange={e => setPostForm(p => ({ ...p, title: e.target.value }))}
-                      placeholder="Post title..."
-                      className="soul-input mb-3 text-sm" />
-                    <textarea value={postForm.content}
-                      onChange={e => setPostForm(p => ({ ...p, content: e.target.value }))}
-                      placeholder="Share your thoughts, experience, or question..."
-                      rows={4}
-                      className="soul-input mb-3 text-sm resize-none" />
-                    <div className="flex gap-2">
-                      <button onClick={submitPost}
-                        disabled={!postForm.title.trim() || !postForm.content.trim()}
-                        className="btn-soul px-5 py-2.5 rounded-xl text-sm disabled:opacity-40 disabled:transform-none">
-                        <span>Post</span>
-                      </button>
-                      <button onClick={() => setShowNewPost(false)}
-                        className="px-5 py-2.5 rounded-xl border border-soul-border text-sm text-soul-muted hover:bg-soul-bg">
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Posts — identical rendering to v2 */}
-                {activePosts.map(post => {
-                  const isUpvoted = upvoted.has(post.id)
-                  return (
-                    <div key={post.id} className={`bg-white rounded-2xl border transition-all ${
-                      post.pinned ? 'border-blue-light' : 'border-soul-border hover:border-blue-light'
-                    }`}>
-                      {post.pinned && (
-                        <div className="flex items-center gap-1.5 px-5 pt-3 pb-1">
-                          <Pin size={11} style={{ color: '#5DADE2' }} />
-                          <span className="text-xs font-semibold" style={{ color: '#5DADE2' }}>Pinned post</span>
-                        </div>
-                      )}
-                      <div className="p-5 flex gap-4">
-                        <div className="flex flex-col items-center gap-1.5 pt-0.5">
-                          <button onClick={() => handleUpvote(post.id)}
-                            className={`p-1.5 rounded-lg transition-all ${
-                              isUpvoted ? 'text-blue-calm bg-blue-pale' : 'text-soul-muted hover:bg-soul-bg hover:text-blue-calm'
-                            }`}>
-                            <ArrowUp size={16} />
-                          </button>
-                          <span className={`text-xs font-bold ${isUpvoted ? 'text-blue-calm' : 'text-soul-muted'}`}>
-                            {post.upvotes + (isUpvoted ? 1 : 0)}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                              style={{ background: 'linear-gradient(135deg, #5DADE2, #A29BFE)' }}>
-                              {post.avatar}
-                            </div>
-                            <span className="text-xs font-semibold text-soul-text">{post.user}</span>
-                            <span className="text-soul-border">·</span>
-                            <span className="text-xs text-soul-muted">{post.time}</span>
-                          </div>
-                          <h4 className="font-semibold text-soul-text text-sm mb-2 leading-snug">{post.title}</h4>
-                          <p className="text-xs text-soul-muted leading-relaxed mb-3">{post.content}</p>
-                          <button
-                            onClick={() => setExpandedComments(expandedComments === post.id ? null : post.id)}
-                            className="flex items-center gap-1.5 text-xs text-soul-muted hover:text-blue-calm transition-colors">
-                            <MessageCircle size={13} />
-                            {post.commentCount} comments
-                          </button>
-                          {expandedComments === post.id && (
-                            <div className="mt-3 pt-3 border-t border-soul-border">
-                              <p className="text-xs text-soul-muted italic">
-                                💬 Join the community and start sharing to see comments!
-                              </p>
-                            </div>
-                          )}
+          <div className="flex-1 min-w-0">
+            <AnimatePresence mode="wait">
+              {!activeId ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="bg-white rounded-[2.5rem] p-12 border border-slate-100 shadow-sm flex flex-col items-center justify-center text-center h-[500px]"
+                >
+                  <div className="w-20 h-20 rounded-3xl bg-slate-50 flex items-center justify-center text-4xl mb-6 shadow-inner">🤝</div>
+                  <h2 className="font-display text-3xl font-bold text-slate-900 mb-3 tracking-tight">Select a Community</h2>
+                  <p className="text-slate-500 max-w-sm mb-0">Choose a circle to start connecting, sharing, and healing together.</p>
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key={activeId}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="space-y-6"
+                >
+                  {/* Community banner */}
+                  <div className="bg-white rounded-[2.5rem] p-8 border border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm overflow-hidden relative">
+                    <div className="absolute top-0 right-0 w-64 h-64 blur-3xl opacity-10 pointer-events-none"
+                      style={{ background: activeCommunity?.color }} />
+                    
+                    <div className="flex items-center gap-5 relative z-10">
+                      <motion.div 
+                        initial={{ scale: 0.8 }} animate={{ scale: 1 }}
+                        className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-4xl bg-slate-50 border border-slate-100 shadow-inner"
+                      >
+                        {activeCommunity?.emoji}
+                      </motion.div>
+                      <div>
+                        <h2 className="font-display text-3xl font-bold text-slate-900 tracking-tight uppercase">{activeCommunity?.name}</h2>
+                        <div className="flex items-center gap-3 mt-1">
+                          <p className="text-xs font-bold text-slate-400 tracking-widest uppercase">{activeCommunity?.memberCount?.toLocaleString()} members</p>
+                          <span className="w-1 h-1 rounded-full bg-slate-200" />
+                          <p className="text-xs text-slate-500 font-light">{activeCommunity?.description}</p>
                         </div>
                       </div>
                     </div>
-                  )
-                })}
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center h-80 bg-white rounded-2xl border border-soul-border text-center px-6">
-                <div className="text-5xl mb-4">👈</div>
-                <h3 className="font-display text-xl font-semibold text-soul-text mb-2">Select a community</h3>
-                <p className="text-sm text-soul-muted max-w-xs">
-                  Choose a community from the left to view posts, join discussions, and connect with others.
-                </p>
-              </div>
-            )}
+                    
+                    <div className="flex items-center gap-3 relative z-10">
+                      <button
+                        onClick={e => handleJoin(activeCommunity?.id, e)}
+                        disabled={joiningId === activeCommunity?.id}
+                        className={`px-6 py-2.5 rounded-2xl font-bold text-sm transition-all flex items-center gap-2 ${
+                          joined.has(activeCommunity?.id) 
+                            ? 'bg-slate-100 text-slate-600 hover:bg-red-50 hover:text-red-600' 
+                            : 'text-white shadow-lg'
+                        }`}
+                        style={!joined.has(activeCommunity?.id) ? { background: activeCommunity?.color } : {}}>
+                        {joiningId === activeCommunity?.id ? <Loader2 size={16} className="animate-spin" /> 
+                          : joined.has(activeCommunity?.id) ? '✓ Joined' : 'Join Community'}
+                      </button>
+
+                      <button onClick={() => setShowNewPost(true)}
+                        className="btn-soul px-6 py-2.5 rounded-2xl font-bold text-sm flex items-center gap-2 shadow-lg shadow-indigo-500/10">
+                        <Plus size={16} /> New Post
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* New post form */}
+                  <AnimatePresence>
+                    {showNewPost && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0, marginBottom: 0 }}
+                        animate={{ height: 'auto', opacity: 1, marginBottom: 16 }}
+                        exit={{ height: 0, opacity: 0, marginBottom: 0 }}
+                        className="bg-white rounded-2xl p-6 border-2 border-indigo-500 shadow-lg overflow-hidden"
+                      >
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-semibold text-soul-text">Create a Post</h3>
+                          <button onClick={() => setShowNewPost(false)} className="p-1.5 rounded-lg text-soul-muted hover:bg-soul-bg">
+                            <X size={16} />
+                          </button>
+                        </div>
+                        <input value={postForm.title}
+                          onChange={e => setPostForm(p => ({ ...p, title: e.target.value }))}
+                          placeholder="Post title..."
+                          className="soul-input mb-3 text-sm" />
+                        <textarea value={postForm.content}
+                          onChange={e => setPostForm(p => ({ ...p, content: e.target.value }))}
+                          placeholder="Share your thoughts, experience, or question..."
+                          rows={4}
+                          className="soul-input mb-3 text-sm resize-none" />
+                        <div className="flex gap-2">
+                          <button onClick={submitPost}
+                            disabled={!postForm.title.trim() || !postForm.content.trim()}
+                            className="btn-soul px-5 py-2.5 rounded-xl text-sm disabled:opacity-40 disabled:transform-none shadow-md">
+                            <span>Post</span>
+                          </button>
+                          <button onClick={() => setShowNewPost(false)}
+                            className="px-5 py-2.5 rounded-xl border border-soul-border text-sm text-soul-muted hover:bg-soul-bg">
+                            Cancel
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Posts */}
+                  <motion.div 
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-4"
+                  >
+                    {activePosts.map(post => {
+                      const isUpvoted = upvoted.has(post.id)
+                      return (
+                        <motion.div 
+                          variants={itemVariants}
+                          key={post.id} 
+                          className={`bg-white rounded-2xl border transition-all shadow-sm ${
+                            post.pinned ? 'border-blue-100' : 'border-soul-border hover:border-indigo-100 hover:shadow-md'
+                          }`}>
+                          {post.pinned && (
+                            <div className="flex items-center gap-1.5 px-5 pt-3 pb-1">
+                              <Pin size={11} className="text-indigo-500" />
+                              <span className="text-xs font-semibold text-indigo-500">Pinned post</span>
+                            </div>
+                          )}
+                          <div className="p-5 flex gap-4">
+                            <div className="flex flex-col items-center gap-1.5 pt-0.5">
+                              <motion.button 
+                                whileTap={{ scale: 0.8 }}
+                                onClick={() => handleUpvote(post.id)}
+                                className={`p-1.5 rounded-lg transition-all ${
+                                  isUpvoted ? 'text-indigo-600 bg-indigo-50' : 'text-soul-muted hover:bg-soul-bg hover:text-indigo-600'
+                                }`}>
+                                <ArrowUp size={16} />
+                              </motion.button>
+                              <span className={`text-xs font-bold ${isUpvoted ? 'text-indigo-600' : 'text-soul-muted'}`}>
+                                {post.upvotes + (isUpvoted ? 1 : 0)}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                                  style={{ background: 'linear-gradient(135deg, #4F46E5, #3B82F6)' }}>
+                                  {post.avatar}
+                                </div>
+                                <span className="text-xs font-semibold text-soul-text">{post.user}</span>
+                                <span className="text-soul-border">·</span>
+                                <span className="text-xs text-soul-muted">{post.time}</span>
+                              </div>
+                              <h4 className="font-semibold text-soul-text text-sm mb-2 leading-snug">{post.title}</h4>
+                              <p className="text-xs text-soul-muted leading-relaxed mb-3">{post.content}</p>
+                              <button
+                                onClick={() => setExpandedComments(expandedComments === post.id ? null : post.id)}
+                                className="flex items-center gap-1.5 text-xs text-soul-muted hover:text-indigo-600 transition-colors">
+                                <MessageCircle size={13} />
+                                {post.commentCount} comments
+                              </button>
+                              <AnimatePresence>
+                                {expandedComments === post.id && (
+                                  <motion.div 
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="mt-3 pt-3 border-t border-soul-border overflow-hidden"
+                                  >
+                                    <p className="text-xs text-soul-muted italic">
+                                      💬 Join the community and start sharing to see comments!
+                                    </p>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

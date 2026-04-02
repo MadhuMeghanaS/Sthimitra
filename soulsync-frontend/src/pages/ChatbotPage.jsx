@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, Bot, Sparkles, RefreshCw, ExternalLink, Lightbulb } from 'lucide-react'
+import { Send, Bot, Sparkles, RefreshCw, ExternalLink, Lightbulb, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const getBotReply = (msg) => {
   const m = msg.toLowerCase()
@@ -109,148 +110,207 @@ export default function ChatbotPage() {
     setMsgs([{ from: 'bot', text: "Fresh start! What's on your mind today? 💙", chips: ['I feel anxious', 'I feel stressed', "I can't sleep", 'I need to relax'] }])
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { staggerChildren: 0.1 } }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  }
+
   return (
-    <div className="pt-20 min-h-screen flex flex-col" style={{ background: 'linear-gradient(160deg, #EBF5FB, #F4F7FB, #F3F2FF)' }}>
-      <div className="max-w-5xl mx-auto w-full px-4 py-8 flex flex-col flex-1 gap-6">
+    <div className="pt-28 pb-10 min-h-screen flex flex-col bg-[#F8FAF8]">
+      <div className="max-w-5xl mx-auto w-full px-6 flex flex-col flex-1 gap-8">
 
         {/* Header */}
-        <div className="text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-blue mb-4">
-            <Sparkles size={14} style={{ color: '#5DADE2' }} />
-            <span className="text-xs font-semibold text-blue-dark">AI Wellness Companion</span>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-50 border border-indigo-100 mb-4">
+            <Sparkles size={14} className="text-indigo-600" />
+            <span className="text-xs font-semibold text-indigo-700">AI Wellness Companion</span>
           </div>
-          <h1 className="font-display text-4xl font-bold text-soul-text mb-2">SoulSync Chat</h1>
-          <p className="text-soul-muted text-sm">Evidence-based wellness guidance, available 24/7</p>
-        </div>
+          <h1 className="font-display text-5xl font-bold text-soul-text mb-3">SoulSync Chat</h1>
+          <p className="text-soul-muted max-w-lg mx-auto">Evidence-based wellness guidance, available 24/7. Your safe space to share and explore.</p>
+        </motion.div>
 
-        <div className="flex flex-col lg:flex-row gap-5 flex-1">
+        <div className="flex flex-col lg:flex-row gap-6 flex-1 items-stretch">
 
           {/* Main chat panel */}
-          <div className="flex-1 flex flex-col bg-white rounded-2xl shadow-soul border border-soul-border overflow-hidden" style={{ minHeight: '520px' }}>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex-1 flex flex-col bg-white rounded-3xl shadow-xl border border-soul-border overflow-hidden min-h-[600px]"
+          >
             {/* Chat header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-soul-border"
-              style={{ background: 'linear-gradient(135deg, #EBF5FB, #F3F2FF)' }}>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-soul"
-                  style={{ background: 'linear-gradient(135deg, #5DADE2, #A29BFE)' }}>
-                  <Bot size={20} color="white" />
-                </div>
+            <div className="flex items-center justify-between px-6 py-5 border-b border-soul-border bg-slate-50/50">
+              <div className="flex items-center gap-4">
+                <motion.div 
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/20"
+                  style={{ background: 'linear-gradient(135deg, #4F46E5, #3B82F6)' }}
+                >
+                  <Bot size={24} color="white" />
+                </motion.div>
                 <div>
-                  <p className="font-semibold text-soul-text text-sm">SoulSync Assistant</p>
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full" style={{ background: '#55E6C1', boxShadow: '0 0 6px rgba(85,230,193,0.6)' }} />
-                    <span className="text-xs text-soul-muted">Online · Responds instantly</span>
+                  <p className="font-semibold text-soul-text">SoulSync Assistant</p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                    <span className="text-xs text-soul-muted">Responds instantly</span>
                   </div>
                 </div>
               </div>
               <button onClick={reset}
-                className="p-2 rounded-xl text-soul-muted hover:bg-white hover:text-blue-calm transition-all"
+                className="p-2.5 rounded-xl text-soul-muted hover:bg-white hover:text-indigo-600 transition-all border border-transparent hover:border-soul-border shadow-sm"
                 title="Start new conversation">
-                <RefreshCw size={15} />
+                <RefreshCw size={18} />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-5 py-5 flex flex-col gap-4" style={{ background: '#FAFCFF', minHeight: 0 }}>
-              {msgs.map((m, i) => (
-                <div key={i} className={`flex flex-col gap-2 ${m.from === 'user' ? 'items-end' : 'items-start'} animate-fade-up`}>
-                  {m.from === 'bot' && (
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-6 h-6 rounded-lg flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, #5DADE2, #A29BFE)' }}>
-                        <Bot size={12} color="white" />
+            <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5 bg-slate-50/30">
+              <AnimatePresence>
+                {msgs.map((m, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className={`flex flex-col gap-2 ${m.from === 'user' ? 'items-end' : 'items-start'}`}
+                  >
+                    {m.from === 'bot' && (
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-6 h-6 rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/10"
+                          style={{ background: 'linear-gradient(135deg, #4F46E5, #3B82F6)' }}>
+                          <Bot size={12} color="white" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider text-soul-muted font-bold">SoulSync AI</span>
                       </div>
-                      <span className="text-xs text-soul-muted font-medium">SoulSync</span>
-                    </div>
-                  )}
-                  <div className={m.from === 'user' ? 'bubble-user' : 'bubble-bot'}>
-                    {m.text.split('\n').map((line, j) => (
-                      <span key={j}>{line}{j < m.text.split('\n').length - 1 && <br />}</span>
-                    ))}
-                  </div>
-                  {m.chips && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {m.chips.map(c => (
-                        <button key={c} onClick={() => send(c)}
-                          className="text-xs px-3 py-1.5 rounded-full border border-lavender-light text-lavender-dark bg-lavender-pale hover:bg-lavender hover:text-white hover:border-lavender transition-all font-medium">
-                          {c}
-                        </button>
+                    )}
+                    <div className={m.from === 'user' ? 'bg-indigo-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-none shadow-lg shadow-indigo-500/10 text-sm max-w-[85%]' : 'bg-white border border-soul-border px-5 py-3.5 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 leading-relaxed max-w-[85%]'}>
+                      {m.text.split('\n').map((line, j) => (
+                        <span key={j}>{line}{j < m.text.split('\n').length - 1 && <br />}</span>
                       ))}
                     </div>
-                  )}
-                  {m.resources?.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
-                      {m.resources.map(r => (
-                        <a key={r.path} href={r.path}
-                          className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full bg-blue-pale text-blue-dark border border-blue-light hover:bg-blue-calm hover:text-white transition-all font-semibold">
-                          <ExternalLink size={10} /> {r.label}
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {m.chips && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {m.chips.map(c => (
+                          <motion.button 
+                            key={c} 
+                            whileHover={{ y: -2 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => send(c)}
+                            className="text-xs px-4 py-2 rounded-full border border-indigo-100 text-indigo-700 bg-white hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all font-medium shadow-sm"
+                          >
+                            {c}
+                          </motion.button>
+                        ))}
+                      </div>
+                    )}
+                    {m.resources?.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {m.resources.map(r => (
+                          <a key={r.path} href={r.path}
+                            className="flex items-center gap-2 text-xs px-4 py-2 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 hover:bg-indigo-100 transition-all font-semibold shadow-sm"
+                          >
+                            <ExternalLink size={12} /> {r.label}
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
 
               {typing && (
-                <div className="flex items-start gap-2 animate-fade-up">
-                  <div className="w-6 h-6 rounded-lg flex items-center justify-center"
-                    style={{ background: 'linear-gradient(135deg, #5DADE2, #A29BFE)' }}>
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-start gap-3"
+                >
+                  <div className="w-6 h-6 rounded-lg flex items-center justify-center shadow-md shadow-indigo-500/10"
+                    style={{ background: 'linear-gradient(135deg, #4F46E5, #3B82F6)' }}>
                     <Bot size={12} color="white" />
                   </div>
-                  <div className="bubble-bot flex items-center gap-1.5 py-4">
+                  <div className="bg-white border border-soul-border px-5 py-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-1.5">
                     {[0, 1, 2].map(i => (
-                      <span key={i} className="w-2.5 h-2.5 rounded-full animate-bounce"
-                        style={{ background: '#AED6F1', animationDelay: `${i * 0.18}s` }} />
+                      <motion.span 
+                        key={i} 
+                        animate={{ y: [0, -4, 0] }}
+                        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                        className="w-2 h-2 rounded-full bg-indigo-200"
+                      />
                     ))}
                   </div>
-                </div>
+                </motion.div>
               )}
               <div ref={endRef} />
             </div>
 
             {/* Input bar */}
-            <div className="px-4 py-3.5 border-t border-soul-border bg-white flex gap-3 items-end">
-              <textarea
-                ref={inputRef}
-                rows={1}
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
-                placeholder="Share how you're feeling, ask for guidance..."
-                className="soul-input flex-1 resize-none py-3 text-sm"
-                style={{ maxHeight: '120px', overflowY: 'auto' }}
-              />
-              <button onClick={() => send()} disabled={!input.trim()}
-                className="btn-soul w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 disabled:opacity-40 disabled:transform-none disabled:shadow-none">
-                <span><Send size={16} /></span>
+            <div className="px-6 py-5 border-t border-soul-border bg-white flex gap-4 items-end">
+              <div className="flex-1 relative">
+                <textarea
+                  ref={inputRef}
+                  rows={1}
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}
+                  placeholder="Share how you're feeling..."
+                  className="soul-input w-full resize-none py-3.5 px-5 text-sm rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                  style={{ maxHeight: '150px', overflowY: 'auto' }}
+                />
+              </div>
+              <button 
+                onClick={() => send()} 
+                disabled={!input.trim()}
+                className="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center transition-all hover:bg-indigo-700 hover:shadow-lg disabled:opacity-30 disabled:bg-slate-400 group"
+              >
+                <Send size={20} className="group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Sidebar */}
-          <div className="lg:w-64 flex flex-col gap-4">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="lg:w-80 flex flex-col gap-6"
+          >
             {/* Conversation starters */}
-            <div className="bg-white rounded-2xl border border-soul-border shadow-soul p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <Lightbulb size={15} style={{ color: '#A29BFE' }} />
-                <h3 className="font-semibold text-soul-text text-sm">Conversation Starters</h3>
+            <motion.div variants={itemVariants} className="bg-white rounded-3xl border border-soul-border shadow-xl p-6">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="w-8 h-8 rounded-xl bg-orange-50 flex items-center justify-center">
+                  <Lightbulb size={18} className="text-orange-500" />
+                </div>
+                <h3 className="font-semibold text-soul-text">Need inspiration?</h3>
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2.5">
                 {prompts.map(p => (
                   <button key={p} onClick={() => send(p)}
-                    className="text-left text-xs text-soul-muted px-3 py-2.5 rounded-xl hover:bg-soul-bg hover:text-soul-text transition-all border border-transparent hover:border-soul-border leading-relaxed">
+                    className="text-left text-xs text-soul-muted px-4 py-3 rounded-2xl hover:bg-slate-50 hover:text-indigo-600 transition-all border border-transparent hover:border-indigo-100 group">
                     "{p}"
                   </button>
                 ))}
               </div>
-            </div>
+            </motion.div>
 
             {/* Disclaimer */}
-            <div className="rounded-2xl p-4 text-xs leading-relaxed" style={{ background: 'rgba(162,155,254,0.08)', border: '1px solid rgba(162,155,254,0.2)', color: '#7F8C8D' }}>
-              <p className="font-semibold text-lavender-dark mb-1">Important Note</p>
-              This AI companion provides wellness guidance and support suggestions. It is not a substitute for professional mental health care. If you're in crisis, please reach out to a qualified mental health professional or emergency services.
-            </div>
-          </div>
+            <motion.div variants={itemVariants} className="bg-indigo-50/50 rounded-3xl p-6 border border-indigo-100/50">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={16} className="text-indigo-600" />
+                <p className="font-bold text-xs uppercase tracking-wider text-indigo-700">Wellness Note</p>
+              </div>
+              <p className="text-xs leading-relaxed text-indigo-900/70">
+                This AI companion provides wellness guidance and support suggestions. It is not a substitute for professional mental health care. If you're in crisis, please reach out to emergency services.
+              </p>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </div>

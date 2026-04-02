@@ -10,8 +10,10 @@ import Therapy from './pages/Therapy'
 import Communities from './pages/Communities'
 import Profile from './pages/Profile'
 import ChatbotPage from './pages/ChatbotPage'
+import { useState } from 'react'     
 
 export default function App() {
+    const [showChat, setShowChat] = useState(false) 
   return (
     <AuthProvider>
       <BrowserRouter>
@@ -40,10 +42,37 @@ export default function App() {
               <Route path="/communities" element={<Communities />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/chat" element={<ChatbotPage />} />
+              
             </Routes>
           </main>
           <Footer />
         </div>
+
+        {/* ── FLOATING CHAT BUTTON (add this block) ── */}
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 1000
+        }}>
+          {showChat && (
+            <div style={{ marginBottom: 12, width: 340 }}>
+              <ChatbotWidget />
+            </div>
+          )}
+          <button
+            onClick={() => setShowChat(!showChat)}
+            style={{
+              width: 56, height: 56, borderRadius: '50%', border: 'none',
+              background: 'linear-gradient(135deg, #8FAF9A, #5C7A66)',
+              boxShadow: '0 8px 24px rgba(92,122,102,.4)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', marginLeft: 'auto',
+              fontSize: 24,
+            }}
+          >
+            {showChat ? '✕' : '🧘'}
+          </button>
+        </div>
+        {/* ── END FLOATING CHAT ── */}
+
       </BrowserRouter>
     </AuthProvider>
   )
