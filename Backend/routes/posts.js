@@ -19,6 +19,7 @@ router.get('/', optionalAuth, async (req, res, next) => {
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const posts = await Post.find({ community, isActive: true })
       .populate('author', 'name avatar')
+      .populate('comments.user', 'name avatar')
       .sort(sortOptions[sort] || sortOptions.new)
       .skip(skip)
       .limit(parseInt(limit));
@@ -53,8 +54,8 @@ router.post('/', protect, async (req, res, next) => {
       tags: tags || [],
     });
 
-    await post.populate('author', 'name avatar');
-    const obj = post.toObject();
+    const populatedPost = await Post.findById(post._id).populate('author', 'name avatar');
+    const obj = populatedPost.toObject();
     obj.upvoteCount = 0;
     obj.commentCount = 0;
     obj.isUpvoted = false;
@@ -92,14 +93,55 @@ router.post('/:id/comment', protect, async (req, res, next) => {
 
     post.comments.push({ user: req.user.id, content });
     await post.save();
-    await post.populate('comments.user', 'name avatar');
-
-    const newComment = post.comments[post.comments.length - 1];
+    
+    const updatedPost = await Post.findById(post._id).populate('comments.user', 'name avatar');
+    const newComment = updatedPost.comments[updatedPost.comments.length - 1];
+    
     res.status(201).json({ success: true, comment: newComment });
   } catch (err) { next(err); }
 });
 
-// ─── DELETE /api/posts/:id ────────────────────────────────────────────────────
+// ─── PUT /api/posts/:id (Edit Post) ───────────────────────────────────────────
+router.put('/:id', protect, async (req, res, next) => {
+  try {
+    const { title, content } = req.body;
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found.' });
+    if (post.author.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to edit this post.' });
+    }
+
+    if (title)   post.title   = title.trim();
+    if (content) post.content = content.trim();
+    await post.save();
+    const updatedPost = await Post.findById(post._id).populate('author', 'name avatar').populate('comments.user', 'name avatar');
+    res.json({ success: true, post: updatedPost });
+  } catch (err) { next(err); }
+});
+
+// ─── POST /api/posts/:id/react ──────────────────────────────────────────────
+router.post('/:id/react', protect, async (req, res, next) => {
+  try {
+    const { emoji } = req.body;
+    if (!emoji) return res.status(400).json({ success: false, message: 'Emoji required.' });
+
+    const post = await Post.findById(req.params.id);
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found.' });
+
+    const existingReaction = post.reactions.find(r => r.user.toString() === req.user.id && r.emoji === emoji);
+
+    if (existingReaction) {
+      post.reactions = post.reactions.filter(r => !(r.user.toString() === req.user.id && r.emoji === emoji));
+    } else {
+      post.reactions.push({ user: req.user.id, emoji });
+    }
+
+    await post.save();
+    res.json({ success: true, reactions: post.reactions });
+  } catch (err) { next(err); }
+});
+
+// ─── DELETE /api/posts/:id (Soft Delete) ──────────────────────────────────────
 router.delete('/:id', protect, async (req, res, next) => {
   try {
     const post = await Post.findById(req.params.id);
@@ -111,6 +153,47 @@ router.delete('/:id', protect, async (req, res, next) => {
     post.isActive = false;
     await post.save();
     res.json({ success: true, message: 'Post deleted.' });
+  } catch (err) { next(err); }
+});
+
+// ─── DELETE /api/posts/:postId/comment/:commentId ─────────────────────────────
+router.delete('/:postId/comment/:commentId', protect, async (req, res, next) => {
+  try {
+    const post = await Post.findById(req.params.postId);
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found.' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ success: false, message: 'Comment not found.' });
+
+    if (comment.user.toString() !== req.user.id && post.author.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to delete this comment.' });
+    }
+
+    comment.deleteOne();
+    await post.save();
+    res.json({ success: true, message: 'Comment deleted.' });
+  } catch (err) { next(err); }
+});
+
+// ─── PUT /api/posts/:postId/comment/:commentId ─────────────────────────────
+router.put('/:postId/comment/:commentId', protect, async (req, res, next) => {
+  try {
+    const { content } = req.body;
+    if (!content) return res.status(400).json({ success: false, message: 'Comment content required.' });
+
+    const post = await Post.findById(req.params.postId);
+    if (!post) return res.status(404).json({ success: false, message: 'Post not found.' });
+
+    const comment = post.comments.id(req.params.commentId);
+    if (!comment) return res.status(404).json({ success: false, message: 'Comment not found.' });
+
+    if (comment.user.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: 'Not authorized to edit this comment.' });
+    }
+
+    comment.content = content.trim();
+    await post.save();
+    res.json({ success: true, message: 'Comment updated.' });
   } catch (err) { next(err); }
 });
 

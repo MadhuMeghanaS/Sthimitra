@@ -21,7 +21,9 @@ const eventSchema = new mongoose.Schema({
 
 // Virtual for available spots
 eventSchema.virtual('availableSpots').get(function () {
-  return this.totalSpots - this.registrations.length;
+  const spots = this.totalSpots || 0;
+  const regs = this.registrations || [];
+  return spots - regs.length;
 });
 
 eventSchema.set('toJSON', { virtuals: true });

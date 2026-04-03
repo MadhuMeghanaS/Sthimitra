@@ -36,7 +36,7 @@ router.post('/', optionalAuth, async (req, res, next) => {
         const OpenAI = require('openai');
         const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-        const systemPrompt = `You are SoulSync's compassionate AI wellness companion. Your role is to:
+        const systemPrompt = `You are Sthimitra's compassionate AI wellness companion. Your role is to:
 - Listen with empathy to users' emotional concerns
 - Provide evidence-based mental wellness advice
 - Suggest relevant activities (meditation, yoga, journaling, breathing exercises, nature walks, music relaxation)

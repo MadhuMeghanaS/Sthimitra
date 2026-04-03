@@ -18,6 +18,7 @@ const activitySchema = new mongoose.Schema({
     enum: ['Beginner', 'Intermediate', 'Advanced', 'Beginner to Intermediate'],
     default: 'Beginner',
   },
+  image: { type: String },
   color: { type: String, default: '#22c55e' },
   tags: [{ type: String, lowercase: true }],
   isActive: { type: Boolean, default: true },

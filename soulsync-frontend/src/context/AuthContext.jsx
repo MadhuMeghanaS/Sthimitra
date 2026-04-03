@@ -16,7 +16,13 @@ export const AuthProvider = ({ children }) => {
 
     // Pull real profile from DB (populated with savedActivities, joinedCommunities, registeredEvents)
     axios.get('/api/users/profile')
-      .then(({ data }) => setUser(data.user))
+      .then(({ data }) => {
+        if (data.success && data.user) {
+          setUser(data.user)
+        } else {
+          throw new Error('Malformed profile data')
+        }
+      })
       .catch(() => {
         localStorage.removeItem('soulsync_token')
         localStorage.removeItem('soulsync_user')
@@ -29,8 +35,10 @@ export const AuthProvider = ({ children }) => {
   const refreshUser = useCallback(async () => {
     try {
       const { data } = await axios.get('/api/users/profile')
-      setUser(data.user)
-      localStorage.setItem('soulsync_user', JSON.stringify(data.user))
+      if (data.success && data.user) {
+        setUser(data.user)
+        localStorage.setItem('soulsync_user', JSON.stringify(data.user))
+      }
     } catch (e) {
       console.warn('refreshUser failed:', e?.message)
     }
@@ -42,10 +50,13 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('soulsync_token', data.token)
       axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`
       const profile  = await axios.get('/api/users/profile')
-      const fullUser = profile.data.user
-      setUser(fullUser)
-      localStorage.setItem('soulsync_user', JSON.stringify(fullUser))
-      return { success: true }
+      const fullUser = profile.data?.user
+      if (fullUser) {
+        setUser(fullUser)
+        localStorage.setItem('soulsync_user', JSON.stringify(fullUser))
+        return { success: true }
+      }
+      throw new Error('Profile fetch failed after login')
     } catch (e) {
       return { success: false, message: e.response?.data?.message || 'Login failed' }
     }

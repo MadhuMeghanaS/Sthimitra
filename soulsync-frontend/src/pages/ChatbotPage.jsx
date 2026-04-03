@@ -61,7 +61,7 @@ const getBotReply = (msg) => {
     }
 
   return {
-    text: "Hello! I'm your SoulSync wellness companion 💙 I'm here to provide personalized mental wellness guidance.\n\nYou can tell me about:\n• How you're feeling emotionally\n• Stress or anxiety you're experiencing\n• Sleep difficulties\n• Focus or concentration problems\n• Relationship or work stress\n\nI'll suggest evidence-based activities, explain therapy approaches, and point you toward supportive communities. What's on your mind?",
+    text: "Hello! I'm your Sthimitra wellness companion 💙 I'm here to provide personalized mental wellness guidance.\n\nYou can tell me about:\n• How you're feeling emotionally\n• Stress or anxiety you're experiencing\n• Sleep difficulties\n• Focus or concentration problems\n• Relationship or work stress\n\nI'll suggest evidence-based activities, explain therapy approaches, and point you toward supportive communities. What's on your mind?",
     chips: ['I feel anxious', 'I feel stressed', 'I can\'t sleep', 'I need to focus', 'I need to relax'],
     resources: []
   }
@@ -82,7 +82,7 @@ export default function ChatbotPage() {
   const [msgs, setMsgs] = useState([
     {
       from: 'bot',
-      text: "Hello! I'm your SoulSync wellness companion 💙\n\nI'm trained to provide thoughtful, evidence-based mental wellness guidance. Share how you're feeling — whether it's stress, anxiety, low mood, sleep issues, or anything else — and I'll give you personalized recommendations.\n\nWhat would you like to explore today?",
+      text: "Hello! I'm your Sthimitra wellness companion 💙\n\nI'm trained to provide thoughtful, evidence-based mental wellness guidance. Share how you're feeling — whether it's stress, anxiety, low mood, sleep issues, or anything else — and I'll give you personalized recommendations.\n\nWhat would you like to explore today?",
       chips: ['I feel anxious', 'I feel stressed', "I can't sleep", 'I need to relax', 'I feel low'],
     }
   ])
@@ -90,8 +90,13 @@ export default function ChatbotPage() {
   const [typing, setTyping] = useState(false)
   const endRef = useRef(null)
   const inputRef = useRef(null)
+  const scrollRef = useRef(null)
 
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [msgs, typing])
+  useEffect(() => { 
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
+  }, [msgs, typing])
 
   const send = (text) => {
     const msg = text || input.trim()
@@ -134,7 +139,7 @@ export default function ChatbotPage() {
             <Sparkles size={14} className="text-indigo-600" />
             <span className="text-xs font-semibold text-indigo-700">AI Wellness Companion</span>
           </div>
-          <h1 className="font-display text-5xl font-bold text-soul-text mb-3">SoulSync Chat</h1>
+          <h1 className="font-display text-5xl font-bold text-soul-text mb-3">Sthimitra Chat</h1>
           <p className="text-soul-muted max-w-lg mx-auto">Evidence-based wellness guidance, available 24/7. Your safe space to share and explore.</p>
         </motion.div>
 
@@ -158,7 +163,7 @@ export default function ChatbotPage() {
                   <Bot size={24} color="white" />
                 </motion.div>
                 <div>
-                  <p className="font-semibold text-soul-text">SoulSync Assistant</p>
+                  <p className="font-semibold text-soul-text">Sthimitra Assistant</p>
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
                     <span className="text-xs text-soul-muted">Responds instantly</span>
@@ -173,7 +178,7 @@ export default function ChatbotPage() {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5 bg-slate-50/30">
+            <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6 flex flex-col gap-5 bg-slate-50/30 scroll-smooth">
               <AnimatePresence>
                 {msgs.map((m, i) => (
                   <motion.div 
@@ -188,7 +193,7 @@ export default function ChatbotPage() {
                           style={{ background: 'linear-gradient(135deg, #4F46E5, #3B82F6)' }}>
                           <Bot size={12} color="white" />
                         </div>
-                        <span className="text-[10px] uppercase tracking-wider text-soul-muted font-bold">SoulSync AI</span>
+                        <span className="text-[10px] uppercase tracking-wider text-soul-muted font-bold">Sthimitra AI</span>
                       </div>
                     )}
                     <div className={m.from === 'user' ? 'bg-indigo-600 text-white px-5 py-3.5 rounded-2xl rounded-tr-none shadow-lg shadow-indigo-500/10 text-sm max-w-[85%]' : 'bg-white border border-soul-border px-5 py-3.5 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700 leading-relaxed max-w-[85%]'}>

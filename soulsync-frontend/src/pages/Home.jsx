@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import axios from 'axios'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Star, Sparkles, Wind, Brain, Users, ChevronDown, Bot } from 'lucide-react'
 import StressAssessment from '../components/StressAssessment'
@@ -88,9 +89,47 @@ const Testimonial = ({ name, text, stars, delay }) => (
   </motion.div>
 )
 
-
+/* ─── Floating Decorative Bubble ───────────────────────────────────────────── */
+const FloatingBubble = ({ size, top, left, right, bottom, color, delay, duration }) => (
+  <motion.div
+    className="absolute rounded-full pointer-events-none backdrop-blur-2xl shadow-2xl"
+    style={{ 
+      width: size, height: size, 
+      top, left, right, bottom, 
+      background: color,
+      border: '1px solid rgba(255,255,255,0.4)',
+      zIndex: 1 
+    }}
+    animate={{ 
+      y: [0, -30, 0], 
+      x: [0, 15, -15, 0]
+    }}
+    transition={{ repeat: Infinity, duration, delay, ease: "easeInOut" }}
+  >
+    <div className="absolute inset-0 rounded-full" style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, transparent 100%)' }} />
+  </motion.div>
+)
 export default function Home() {
   const [showAssessment, setShowAssessment] = useState(false)
+  const [stats,          setStats]          = useState({ users: 0, activities: 0, communities: 0 })
+  const [loadingStats,   setLoadingStats]   = useState(true)
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+    const fetchStats = async () => {
+      try {
+        const { data } = await axios.get('/api/stats')
+        if (data.success) {
+          setStats(data.stats)
+        }
+      } catch (err) {
+        console.error('Error fetching stats:', err)
+      } finally {
+        setLoadingStats(false)
+      }
+    }
+    fetchStats()
+  }, [])
   
   // Parallax values based on scroll
   const { scrollY } = useScroll()
@@ -120,12 +159,22 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           FLAT CINEMATIC FULL-WIDTH HERO SECTION
       ═══════════════════════════════════════════════════════════ */}
-      <section className="relative min-h-[95vh] flex flex-col items-center justify-center" style={{ background: 'linear-gradient(160deg, #F8FAFC 0%, #FFFFFF 40%, #EEF2FF 100%)' }}>
+      <section className="relative min-h-[95vh] flex flex-col items-center justify-center overflow-hidden bg-slate-50">
         
-        {/* Parallax Orbs */}
-        <Orb y={y1} className="w-[30rem] h-[30rem] -top-32 -left-32 opacity-[0.04]" style={{ background: '#4F46E5', filter: 'blur(60px)' }} />
-        <Orb y={y2} className="w-[25rem] h-[25rem] top-1/4 right-[-10%] opacity-[0.03]" style={{ background: '#3B82F6', filter: 'blur(50px)' }} />
-        <Orb y={y3} className="w-[20rem] h-[20rem] bottom-0 left-1/3 opacity-[0.04]" style={{ background: '#0F172A', filter: 'blur(40px)' }} />
+        {/* Soft Animated Ambient Background Canvas */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-60">
+          <motion.div animate={{ x: [-50, 50, -50], y: [-20, 20, -20] }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' }}
+            className="absolute -top-32 -left-32 w-[600px] h-[600px] bg-indigo-300 rounded-full blur-[100px] mix-blend-multiply opacity-50" />
+          <motion.div animate={{ x: [50, -50, 50], y: [20, -20, 20] }} transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+            className="absolute top-1/4 right-[-10%] w-[600px] h-[600px] bg-cyan-300 rounded-full blur-[120px] mix-blend-multiply opacity-50" />
+          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 25, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute bottom-0 left-1/3 w-[700px] h-[700px] bg-purple-200 rounded-full blur-[150px] mix-blend-multiply opacity-30" />
+        </div>
+
+        {/* Parallax Orbs (Layered on top of ambient canvas) */}
+        <Orb y={y1} className="w-[30rem] h-[30rem] -top-32 -left-32 opacity-20" style={{ background: '#4F46E5', filter: 'blur(60px)' }} />
+        <Orb y={y2} className="w-[25rem] h-[25rem] top-1/4 right-[-10%] opacity-20" style={{ background: '#3B82F6', filter: 'blur(50px)' }} />
+        <Orb y={y3} className="w-[20rem] h-[20rem] bottom-0 left-1/3 opacity-20" style={{ background: '#8B5CF6', filter: 'blur(40px)' }} />
 
         {/* Breathing abstract blob now acts as an immersive center backdrop behind the text */}
         <motion.div 
@@ -168,7 +217,7 @@ export default function Home() {
             <h1 className="font-serif font-medium tracking-tight text-slate-900 mb-6 flex flex-col items-center gap-2">
               <span className="text-sm md:text-base font-sans font-extrabold tracking-[0.25em] text-indigo-500 uppercase mb-2">Welcome</span>
               <span className="text-[4.5rem] md:text-[6.5rem] leading-[1] text-slate-800 drop-shadow-sm">
-                Soul<span className="italic text-indigo-500">Sync</span>
+                Sthi<span className="italic text-indigo-500">mitra</span>
               </span>
             </h1>
 
@@ -195,15 +244,21 @@ export default function Home() {
             {/* Revamped central glassmorphic stats */}
             <div className="flex bg-white/70 backdrop-blur-xl rounded-[2rem] border border-white shadow-xl p-2 md:p-3 w-max">
               <div className="flex flex-col items-center justify-center px-6 md:px-10 py-3 border-r border-slate-200/50">
-                <div className="text-3xl md:text-4xl font-serif font-medium text-indigo-600 mb-1 drop-shadow-sm">12K+</div>
+                <div className="text-3xl md:text-4xl font-serif font-medium text-indigo-600 mb-1 drop-shadow-sm">
+                  {loadingStats ? '...' : stats.users}
+                </div>
                 <div className="text-[10px] md:text-xs font-sans font-extrabold text-slate-500 uppercase tracking-widest">Active Users</div>
               </div>
               <div className="flex flex-col items-center justify-center px-6 md:px-10 py-3 border-r border-slate-200/50">
-                <div className="text-3xl md:text-4xl font-serif font-medium text-blue-500 mb-1 drop-shadow-sm">50+</div>
+                <div className="text-3xl md:text-4xl font-serif font-medium text-blue-500 mb-1 drop-shadow-sm">
+                   {loadingStats ? '...' : stats.activities}
+                </div>
                 <div className="text-[10px] md:text-xs font-sans font-extrabold text-slate-500 uppercase tracking-widest">Activities</div>
               </div>
               <div className="flex flex-col items-center justify-center px-6 md:px-10 py-3">
-                <div className="text-3xl md:text-4xl font-serif font-medium text-slate-800 mb-1 drop-shadow-sm">20+</div>
+                <div className="text-3xl md:text-4xl font-serif font-medium text-slate-800 mb-1 drop-shadow-sm">
+                   {loadingStats ? '...' : stats.communities}
+                </div>
                 <div className="text-[10px] md:text-xs font-sans font-extrabold text-slate-500 uppercase tracking-widest">Communities</div>
               </div>
             </div>
@@ -229,8 +284,16 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           DISCOVERY SECTION
       ═══════════════════════════════════════════════════════════ */}
-      <section className="py-24 px-6 bg-slate-50/50 relative z-20">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-24 px-6 relative z-20 overflow-hidden" style={{ background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-30">
+          <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 12, repeat: Infinity, ease: 'linear' }}
+            className="absolute top-10 -right-20 w-[400px] h-[400px] bg-blue-300/40 rounded-full blur-[100px]" />
+        </div>
+        
+        <FloatingBubble size="140px" top="5%" left="8%" color="rgba(96,165,250,0.15)" duration={8} delay={0} />
+        <FloatingBubble size="90px" bottom="15%" right="10%" color="rgba(129,140,248,0.1)" duration={6} delay={1.5} />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
             className="text-center mb-14"
@@ -250,7 +313,7 @@ export default function Home() {
               desc="Explore science-backed activities — meditation, yoga, journaling, breathing exercises — tailored to your stress level."
               tag="8 Activities" tagColor="tag-blue" accent="#3B82F6" />
             <DiscoveryCard delay={0.2} to="/therapy" icon={Brain} title="Therapy Discovery"
-              image="https://images.unsplash.com/photo-1527137342181-19aab11a8ee1?w=800&q=80"
+              image="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&q=80"
               desc="Understand evidence-based therapy methods like CBT, mindfulness, and art therapy. Find events and workshops near you."
               tag="6 Methods" tagColor="tag-lavender" accent="#4F46E5" />
             <DiscoveryCard delay={0.3} to="/communities" icon={Users} title="Support Communities"
@@ -264,8 +327,16 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           STRESS ASSESSMENT CTA
       ═══════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-white overflow-hidden relative z-20">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-20 px-6 overflow-hidden relative z-20" style={{ background: 'linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%)' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden opacity-40">
+          <motion.div animate={{ x: [-20, 20, -20] }} transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
+            className="absolute top-1/2 -left-32 w-[500px] h-[500px] bg-emerald-200/40 rounded-full blur-[120px]" />
+        </div>
+        
+        <FloatingBubble size="180px" top="-5%" right="-3%" color="rgba(52,211,153,0.15)" duration={9} delay={0.5} />
+        <FloatingBubble size="70px" bottom="20%" left="12%" color="rgba(59,130,246,0.12)" duration={5} delay={0.2} />
+        
+        <div className="max-w-5xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.95, rotate: -1 }} 
             whileInView={{ opacity: 1, scale: 1, rotate: 0 }} 
@@ -345,14 +416,17 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           MINI CHATBOT SECTION
       ═══════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 bg-slate-50/50 relative z-20">
-        <div className="max-w-3xl mx-auto">
+      <section className="py-20 px-6 relative z-20 overflow-hidden" style={{ background: 'linear-gradient(180deg, #f0fdf4 0%, #faf5ff 100%)' }}>
+        <FloatingBubble size="220px" top="15%" left="-5%" color="rgba(167,139,250,0.12)" duration={11} delay={0} />
+        <FloatingBubble size="100px" bottom="10%" right="8%" color="rgba(244,114,182,0.12)" duration={7} delay={1.5} />
+        
+        <div className="max-w-3xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
             className="text-center mb-10"
           >
             <span className="tag-lavender mb-3 inline-block">AI Companion</span>
-            <h2 className="font-display text-4xl font-bold text-slate-900 mb-3">Talk to SoulSync</h2>
+            <h2 className="font-display text-4xl font-bold text-slate-900 mb-3">Talk to Sthimitra</h2>
             <p className="text-slate-500">
               Ask anything about your mental wellness. Get instant guidance, activity suggestions,
               and community recommendations — available 24/7.
@@ -375,8 +449,17 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════════════════
           TESTIMONIALS
       ═══════════════════════════════════════════════════════════ */}
-      <section className="py-20 px-6 relative z-20" style={{ background: 'linear-gradient(160deg, #F8FAFC, #EEF2FF)' }}>
-        <div className="max-w-7xl mx-auto">
+      <section className="py-20 px-6 relative z-20 overflow-hidden" style={{ background: 'linear-gradient(160deg, #faf5ff 0%, #f8fafc 100%)' }}>
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
+          <motion.div animate={{ scale: [1, 1.2, 1], rotate: [0, 90, 0] }} transition={{ duration: 25, repeat: Infinity, ease: 'linear' }}
+            className="absolute bottom-10 left-1/4 w-[400px] h-[400px] bg-violet-200/50 rounded-full blur-[100px]" />
+        </div>
+        
+        <FloatingBubble size="160px" top="-8%" left="35%" color="rgba(192,132,252,0.15)" duration={10} delay={0.2} />
+        <FloatingBubble size="120px" bottom="5%" left="-2%" color="rgba(129,140,248,0.18)" duration={6} delay={2} />
+        <FloatingBubble size="80px" top="40%" right="4%" color="rgba(56,189,248,0.15)" duration={5} delay={1} />
+        
+        <div className="max-w-7xl mx-auto relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
             className="text-center mb-12"
@@ -391,7 +474,7 @@ export default function Home() {
                 stars: 5, 
                 accent: '#818CF8',
                 tag: 'Student Resilience',
-                text: "SoulSync helped me find calm during my busiest semester ever. The breathing exercises became my daily ritual and the anxiety community truly saved me." 
+                text: "Sthimitra helped me find calm during my busiest semester ever. The breathing exercises became my daily ritual and the anxiety community truly saved me." 
               },
               { 
                 name: 'Arjun M.', 

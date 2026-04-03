@@ -1,22 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from './context/AuthContext'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
+import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Activities from './pages/Activities'
 import Therapy from './pages/Therapy'
 import Communities from './pages/Communities'
 import Profile from './pages/Profile'
 import ChatbotPage from './pages/ChatbotPage'
-import { useState } from 'react'     
+import ChatbotWidget from './components/ChatbotWidget'
 
 export default function App() {
     const [showChat, setShowChat] = useState(false) 
   return (
     <AuthProvider>
       <BrowserRouter>
+        <ScrollToTop />
         <Toaster
           position="top-right"
           toastOptions={{

@@ -57,7 +57,7 @@ export default function Navbar() {
               <Sparkles size={20} color="white" />
             </motion.div>
             <span className="font-display font-bold text-2xl tracking-tight text-slate-900">
-              Soul<span className="text-indigo-600">Sync</span>
+              Sthi<span className="text-indigo-600">mitra</span>
             </span>
           </Link>
 

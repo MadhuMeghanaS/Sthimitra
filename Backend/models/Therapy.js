@@ -8,7 +8,10 @@ const therapySchema = new mongoose.Schema({
   explanation: { type: String, required: true },
   helps: [{ type: String }],
   howItWorks: { type: String },
-  color: { type: String, default: '#22c55e' },
+  price: { type: Number, default: 0 },
+  duration: { type: String, default: '60 Minutes' },
+  image: { type: String },
+  color: { type: String },
   isActive: { type: Boolean, default: true },
 }, { timestamps: true });
 

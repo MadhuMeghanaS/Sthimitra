@@ -4,6 +4,7 @@ const commentSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   content: { type: String, required: true, trim: true, maxlength: 1000 },
   upvotes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  reactions: [{ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, emoji: String }],
 }, { timestamps: true });
 
 const postSchema = new mongoose.Schema({
@@ -33,6 +34,7 @@ const postSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
   }],
+  reactions: [{ user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, emoji: String }],
   comments: [commentSchema],
   tags: [{ type: String, lowercase: true }],
   isPinned: { type: Boolean, default: false },

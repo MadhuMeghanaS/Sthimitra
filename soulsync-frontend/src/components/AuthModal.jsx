@@ -18,7 +18,7 @@ export default function AuthModal({ onClose }) {
       : await register(form.name, form.email, form.password)
     setLoading(false)
     if (res.success) {
-      toast.success(mode === 'login' ? 'Welcome back! 💙' : 'Welcome to SoulSync! ✨')
+      toast.success(mode === 'login' ? 'Welcome back! 💙' : 'Welcome to Sthimitra! ✨')
       onClose()
     } else {
       toast.error(res.message)
@@ -41,7 +41,7 @@ export default function AuthModal({ onClose }) {
                 style={{ background: 'linear-gradient(135deg, #5DADE2, #A29BFE)' }}>
                 <Sparkles size={15} color="white" />
               </div>
-              <span className="font-display text-lg font-semibold gradient-text">SoulSync</span>
+              <span className="font-display text-lg font-semibold gradient-text">Sthimitra</span>
             </div>
             <button onClick={onClose} className="p-2 rounded-xl text-soul-muted hover:bg-soul-bg">
               <X size={18} />

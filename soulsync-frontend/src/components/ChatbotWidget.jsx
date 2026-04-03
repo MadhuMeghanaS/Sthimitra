@@ -12,12 +12,12 @@ const getBotReply = (msg) => {
   if (m.match(/sleep|insomnia|tired|exhaust/)) return { text: "Poor sleep deeply impacts everything else. Try Music Relaxation or Progressive Relaxation before bed. Limiting screens 1 hour before sleep is one of the most evidence-backed improvements you can make.", chips: ['Music Relaxation', 'Progressive Relaxation', 'Mindfulness Therapy'] }
   if (m.match(/calm|relax|peace|breath|mindful/)) return { text: "Finding calm is a practice, not a destination 🌿 Here are my top suggestions: 5-minute Breathing Exercises, a guided Meditation session, or gentle Yoga. The Mindfulness Circle community shares daily practices.", chips: ['Breathing Exercises', 'Meditation', 'Yoga'] }
   if (m.match(/focus|concentrat|distract/)) return { text: "Difficulty focusing often signals mental fatigue. Try the Pomodoro technique: 25 minutes of focus, 5 minute break. Meditation has strong research backing for improving attention span over time.", chips: ['Meditation', 'Journaling', 'CBT Therapy'] }
-  return { text: "I'm your SoulSync wellness companion 💙 You can share how you're feeling — whether it's stress, anxiety, low mood, sleep trouble, or anything else — and I'll suggest personalized activities, therapy approaches, and communities to support you.", chips: ['I feel anxious', 'I need to relax', 'Help with sleep'] }
+  return { text: "I'm your Sthimitra wellness companion 💙 You can share how you're feeling — whether it's stress, anxiety, low mood, sleep trouble, or anything else — and I'll suggest personalized activities, therapy approaches, and communities to support you.", chips: ['I feel anxious', 'I need to relax', 'Help with sleep'] }
 }
 
 export default function ChatbotWidget() {
   const [msgs, setMsgs] = useState([
-    { from: 'bot', text: "Hi! I'm your SoulSync wellness companion 💙 How are you feeling today? Tell me what's on your mind.", chips: ['I feel stressed', 'I feel anxious', 'Help me sleep', 'I need to calm down'] }
+    { from: 'bot', text: "Hi! I'm your Sthimitra wellness companion 💙 How are you feeling today? Tell me what's on your mind.", chips: ['I feel stressed', 'I feel anxious', 'Help me sleep', 'I need to calm down'] }
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -50,7 +50,7 @@ export default function ChatbotWidget() {
             <Bot size={18} color="white" />
           </div>
           <div className="text-left">
-            <p className="font-semibold text-soul-text text-sm">SoulSync AI Companion</p>
+            <p className="font-semibold text-soul-text text-sm">Sthimitra AI Companion</p>
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-mint animate-pulse-glow" style={{ background: '#55E6C1' }} />
               <span className="text-xs text-soul-muted">Online · Quick reply mode</span>
@@ -132,7 +132,7 @@ export default function ChatbotWidget() {
 
 
 // ============================================================
-//  SoulSync — AI Stress Coach Chat
+//  Sthimitra — AI Stress Coach Chat
 //  File: src/components/ChatbotWidget.jsx
 //
 //  LLM: Google Gemini 1.5 Flash (FREE)
@@ -154,7 +154,7 @@ const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemi
 //  SYSTEM PROMPT  — original prompt restored + relationship support added
 // ─────────────────────────────────────────────────────────────
 const SYSTEM_PROMPT = `
-You are SoulSync AI — a warm, emotionally supportive companion who talks like a close, understanding friend.
+You are Sthimitra AI — a warm, emotionally supportive companion who talks like a close, understanding friend.
 
 Your goal is to make the user feel heard, safe, and supported — not rushed or analyzed.
 
@@ -187,7 +187,7 @@ friendship problems, romantic issues, or just a bad day.
    - Give small, realistic suggestions (only if needed)
    - Sometimes just being there is enough
 
-5. If relevant, suggest SoulSync features naturally (not forced)
+5. If relevant, suggest Sthimitra features naturally (not forced)
 
 === TONE & STYLE ===
 - Warm, calm, caring
@@ -432,7 +432,7 @@ function Bubble({ msg, onChipClick }) {
           }}>
             <Bot size={13} color="white" />
           </div>
-          <span style={{ fontSize: 11, color: '#9ABAAF', fontWeight: 600 }}>SoulSync AI</span>
+          <span style={{ fontSize: 11, color: '#9ABAAF', fontWeight: 600 }}>Sthimitra AI</span>
         </div>
       )}
 
@@ -556,7 +556,7 @@ function ErrorBanner({ msg, onDismiss, onRetry }) {
 export default function ChatbotWidget({ fullPage = false }) {
   const [msgs, setMsgs] = useState([{
     from: 'bot',
-    text: "Hey 👋 I'm your SoulSync companion — you can talk to me about anything. Stress, relationships, family stuff, sleep, work pressure… whatever's on your mind. What's going on?",
+    text: "Hey 👋 I'm your Sthimitra companion — you can talk to me about anything. Stress, relationships, family stuff, sleep, work pressure… whatever's on your mind. What's going on?",
     suggestions: []
   }])
   const [input, setInput] = useState('')
@@ -700,7 +700,7 @@ export default function ChatbotWidget({ fullPage = false }) {
           </div>
           <div style={{ textAlign: 'left' }}>
             <p style={{ fontWeight: 700, color: '#263832', fontSize: 14 }}>
-              SoulSync AI Coach
+              Sthimitra AI Coach
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
               <span style={{

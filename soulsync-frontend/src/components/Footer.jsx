@@ -14,7 +14,7 @@ export default function Footer() {
                 <Sparkles size={17} color="white" />
               </div>
               <span className="font-display font-semibold text-xl text-white">
-                Soul<span style={{ color: '#5DADE2' }}>Sync</span>
+                Sthi<span style={{ color: '#5DADE2' }}>mitra</span>
               </span>
             </div>
             <p className="text-sm leading-relaxed max-w-xs mb-5" style={{ color: '#7F8C8D' }}>
@@ -65,7 +65,7 @@ export default function Footer() {
         <div className="divider-soul mb-6" style={{ background: 'linear-gradient(90deg, transparent, rgba(93,173,226,0.3), rgba(162,155,254,0.3), transparent)' }} />
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="text-xs" style={{ color: '#7F8C8D' }}>© 2024 SoulSync. All rights reserved.</p>
+          <p className="text-xs" style={{ color: '#7F8C8D' }}>© 2024 Sthimitra. All rights reserved.</p>
           <p className="text-xs flex items-center gap-1.5" style={{ color: '#7F8C8D' }}>
             Made with <Heart size={11} fill="#A29BFE" style={{ color: '#A29BFE' }} /> for mental wellness
           </p>
