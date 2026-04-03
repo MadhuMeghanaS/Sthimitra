@@ -147,7 +147,7 @@ import { Send, Bot, ExternalLink, ChevronDown, ChevronUp, X, RefreshCw } from 'l
 // ─────────────────────────────────────────────────────────────
 //  CONFIG  —  paste your Gemini key in .env as VITE_GEMINI_API_KEY
 // ─────────────────────────────────────────────────────────────
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "AIzaSyDtPDpLV6CMCOsx8S0UzYuAhHlBPyr-R7I"
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ""
 // ✅ NEW — working model
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`
 // ─────────────────────────────────────────────────────────────
@@ -328,18 +328,18 @@ function parseGeminiResponse(raw) {
   if (!raw) return null
 
   // 1. Try direct parse
-  try { return JSON.parse(raw) } catch (_) {}
+  try { return JSON.parse(raw) } catch (_) { }
 
   // 2. Try extracting JSON block from markdown fences
   const fenceMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
   if (fenceMatch) {
-    try { return JSON.parse(fenceMatch[1].trim()) } catch (_) {}
+    try { return JSON.parse(fenceMatch[1].trim()) } catch (_) { }
   }
 
   // 3. Try extracting first {...} block
   const braceMatch = raw.match(/\{[\s\S]*\}/)
   if (braceMatch) {
-    try { return JSON.parse(braceMatch[0]) } catch (_) {}
+    try { return JSON.parse(braceMatch[0]) } catch (_) { }
   }
 
   // 4. Fallback — treat the whole thing as a plain message
@@ -360,15 +360,15 @@ async function callGemini(conversationHistory) {
     })
   }
 
- const body = {
-  system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-  contents,
-  generationConfig: {
-    temperature: 0.85,
-    maxOutputTokens: 500,
-    topP: 0.9,
+  const body = {
+    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents,
+    generationConfig: {
+      temperature: 0.85,
+      maxOutputTokens: 500,
+      topP: 0.9,
+    }
   }
-}
 
   const res = await fetch(GEMINI_URL, {
     method: 'POST',
@@ -661,17 +661,17 @@ export default function ChatbotWidget({ fullPage = false }) {
   // ── Styles ──────────────────────────────────────────────────
   const containerStyle = fullPage
     ? {
-        display: 'flex', flexDirection: 'column',
-        height: '100dvh', background: '#FAFAF7',
-        fontFamily: "'DM Sans', sans-serif",
-      }
+      display: 'flex', flexDirection: 'column',
+      height: '100dvh', background: '#FAFAF7',
+      fontFamily: "'DM Sans', sans-serif",
+    }
     : {
-        width: '100%', background: '#fff',
-        borderRadius: 20, overflow: 'hidden',
-        border: '1px solid #E2EDE7',
-        boxShadow: '0 6px 28px rgba(60,100,80,.12)',
-        fontFamily: "'DM Sans', sans-serif",
-      }
+      width: '100%', background: '#fff',
+      borderRadius: 20, overflow: 'hidden',
+      border: '1px solid #E2EDE7',
+      boxShadow: '0 6px 28px rgba(60,100,80,.12)',
+      fontFamily: "'DM Sans', sans-serif",
+    }
 
   return (
     <div style={containerStyle}>
@@ -853,12 +853,12 @@ export default function ChatbotWidget({ fullPage = false }) {
             >
               {loading
                 ? <span style={{
-                    width: 17, height: 17,
-                    border: '2.5px solid #8FAF9A',
-                    borderTopColor: 'transparent',
-                    borderRadius: '50%', display: 'inline-block',
-                    animation: 'spin 0.7s linear infinite'
-                  }} />
+                  width: 17, height: 17,
+                  border: '2.5px solid #8FAF9A',
+                  borderTopColor: 'transparent',
+                  borderRadius: '50%', display: 'inline-block',
+                  animation: 'spin 0.7s linear infinite'
+                }} />
                 : <Send size={17} color={!input.trim() ? '#9ABAAF' : '#fff'} />
               }
             </button>
