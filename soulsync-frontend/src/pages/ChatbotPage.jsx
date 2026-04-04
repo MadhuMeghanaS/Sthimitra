@@ -98,17 +98,52 @@ export default function ChatbotPage() {
     }
   }, [msgs, typing])
 
-  const send = (text) => {
+  const send = async (text) => {
     const msg = text || input.trim()
     if (!msg) return
     setMsgs(p => [...p, { from: 'user', text: msg }])
     setInput('')
     setTyping(true)
-    setTimeout(() => {
+
+    try {
+      const localMatch = getBotReply(msg)
+      let botText = localMatch.text
+      
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+      if (apiKey) {
+        const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow-up question. Do not give medical diagnoses. User message: " + msg;
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
+        })
+        
+        if (res.ok) {
+          const data = await res.json()
+          if (data.candidates && data.candidates[0].content.parts[0].text) {
+            botText = data.candidates[0].content.parts[0].text
+          }
+        } else {
+          console.error("Gemini API Error:", res.status)
+        }
+      } else {
+        console.warn("Please add VITE_GEMINI_API_KEY to your frontend .env file.")
+      }
+      
+      setMsgs(p => [...p, { from: 'bot', text: botText, chips: localMatch.chips, resources: localMatch.resources }])
+    } catch (err) {
+      console.error("Error fetching AI response:", err)
+      const fallback = getBotReply(msg)
+      setMsgs(p => [...p, { 
+        from: 'bot', 
+        text: "I'm having trouble thinking due to high traffic limits right now, but I still want to help you. \n\n" + fallback.text, 
+        chips: fallback.chips, 
+        resources: fallback.resources 
+      }])
+    } finally {
       setTyping(false)
-      setMsgs(p => [...p, { from: 'bot', ...getBotReply(msg) }])
-      inputRef.current?.focus()
-    }, 900 + Math.random() * 700)
+      setTimeout(() => inputRef.current?.focus(), 100)
+    }
   }
 
   const reset = () => {
