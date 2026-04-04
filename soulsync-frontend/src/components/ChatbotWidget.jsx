@@ -149,7 +149,7 @@ import { Send, Bot, ExternalLink, ChevronDown, ChevronUp, X, RefreshCw } from 'l
 // ─────────────────────────────────────────────────────────────
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ""
 // ✅ NEW — working model
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`
 // ─────────────────────────────────────────────────────────────
 //  SYSTEM PROMPT  — original prompt restored + relationship support added
 // ─────────────────────────────────────────────────────────────

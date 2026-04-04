@@ -112,7 +112,7 @@ export default function ChatbotPage() {
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY
       if (apiKey) {
         const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow-up question. Do not give medical diagnoses. User message: " + msg;
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
