@@ -566,11 +566,13 @@ export default function ChatbotWidget({ fullPage = false }) {
   const [lastUserMsg, setLastUserMsg] = useState(null)
   // API conversation history (plain text only, no suggestions/metadata)
   const [history, setHistory] = useState([])
-  const endRef = useRef(null)
+  const scrollRef = useRef(null)
 
   // Auto-scroll
   useEffect(() => {
-    if (!collapsed) endRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (!collapsed && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+    }
   }, [msgs, collapsed, loading])
 
   // Inject animation CSS
@@ -778,7 +780,7 @@ export default function ChatbotWidget({ fullPage = false }) {
           )}
 
           {/* Messages */}
-          <div style={{
+          <div ref={scrollRef} style={{
             flex: 1,
             overflowY: 'auto',
             height: fullPage ? 'auto' : 280,
@@ -802,7 +804,6 @@ export default function ChatbotWidget({ fullPage = false }) {
               />
             )}
 
-            <div ref={endRef} />
           </div>
 
           {/* Input */}
