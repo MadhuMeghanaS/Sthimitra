@@ -106,12 +106,14 @@ export default function ChatbotPage() {
     setTyping(true)
 
     try {
-      const localMatch = getBotReply(msg)
-      let botText = localMatch.text
-      
+      // Use Groq for any user input. If Groq fails or returns empty, fall back to the local quick‑reply generator.
+      let botText = ''
+      let chips = []
+      let resources = []
+
       const apiKey = import.meta.env.VITE_GROQ_API_KEY
       if (apiKey) {
-        const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow-up question. Do not give medical diagnoses. User message: " + msg;
+        const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow‑up question. Do not give medical diagnoses. User message: " + msg;
         const body = {
           model: 'openai/gpt-oss-120b',
           temperature: 0.85,
@@ -120,7 +122,7 @@ export default function ChatbotPage() {
           stream: false,
           messages: [
             { role: 'system', content: sysPrompt },
-            { role: 'user', content: msg }
+            { role: 'user',   content: msg }
           ]
         };
         const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -131,7 +133,6 @@ export default function ChatbotPage() {
           },
           body: JSON.stringify(body)
         })
-        
         if (res.ok) {
           const data = await res.json()
           const raw = data?.output?.choices?.[0]?.message?.content;
@@ -142,16 +143,24 @@ export default function ChatbotPage() {
       } else {
         console.warn("Please add VITE_GROQ_API_KEY to your frontend .env file.")
       }
-      
-      setMsgs(p => [...p, { from: 'bot', text: botText, chips: localMatch.chips, resources: localMatch.resources }])
+
+      // If Groq didn't give us a response, use the local fallback.
+      if (!botText) {
+        const fallback = getBotReply(msg)
+        botText = fallback.text
+        chips = fallback.chips || []
+        resources = fallback.resources || []
+      }
+
+      setMsgs(p => [...p, { from: 'bot', text: botText, chips, resources }])
     } catch (err) {
       console.error("Error fetching AI response:", err)
       const fallback = getBotReply(msg)
-      setMsgs(p => [...p, { 
-        from: 'bot', 
-        text: "I'm having trouble thinking due to high traffic limits right now, but I still want to help you. \n\n" + fallback.text, 
-        chips: fallback.chips, 
-        resources: fallback.resources 
+      setMsgs(p => [...p, {
+        from: 'bot',
+        text: "I'm having trouble thinking due to high traffic limits right now, but I still want to help you. \n\n" + fallback.text,
+        chips: fallback.chips,
+        resources: fallback.resources
       }])
     } finally {
       setTyping(false)
