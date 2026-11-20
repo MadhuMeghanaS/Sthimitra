@@ -135,8 +135,19 @@ export default function ChatbotPage() {
         })
         if (res.ok) {
           const data = await res.json()
-          const raw = data?.output?.choices?.[0]?.message?.content;
-          if (raw) botText = raw;
+          // Groq returns { choices: [{ message: { content: '...' } }] }
+          const raw = data?.choices?.[0]?.message?.content || ''
+          if (raw) {
+            let parsed
+            try {
+              parsed = JSON.parse(raw)
+            } catch (_) {
+              parsed = { message: raw, suggestions: [] }
+            }
+            botText = parsed.message || parsed.text || raw
+            chips = parsed.suggestions || []
+            resources = parsed.resources || []
+          }
         } else {
           console.error('Groq API Error:', res.status)
         }
