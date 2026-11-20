@@ -145,11 +145,11 @@ import { Link } from 'react-router-dom'
 import { Send, Bot, ExternalLink, ChevronDown, ChevronUp, X, RefreshCw } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────
-//  CONFIG  —  paste your Qwen API key in .env as VITE_QWEN_API_KEY
+//  CONFIG  —  paste your Groq API key in .env as VITE_GROQ_API_KEY
 // ─────────────────────────────────────────────────────────────
-const QWEN_API_KEY = import.meta.env.VITE_QWEN_API_KEY || ""
-// ✅ NEW — Qwen free‑tier endpoint (DashScope)
-const QWEN_URL = `https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation`
+const GROQ_API_KEY = import.meta.env.VITE_GROQ_API_KEY || ""
+// ✅ NEW — Groq free‑tier endpoint (OpenAI compatible)
+const GROQ_URL = `https://api.groq.com/openai/v1/chat/completions`
 
 // ─────────────────────────────────────────────────────────────
 //  SYSTEM PROMPT  — original prompt restored + relationship support added
@@ -325,7 +325,7 @@ User: "I feel stressed about exams"
 // ─────────────────────────────────────────────────────────────
 //  ROBUST JSON PARSER  — handles messy Gemini output
 // ─────────────────────────────────────────────────────────────
-function parseQwenResponse(raw) {
+function parseGroqResponse(raw) {
   if (!raw) return null
 
   // 1. Try direct parse
@@ -348,10 +348,10 @@ function parseQwenResponse(raw) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CALL QWEN
+//  CALL GROQ
 // ─────────────────────────────────────────────────────────────
-async function callQwen(conversationHistory) {
-  // Build Qwen‑compatible messages array (OpenAI style)
+async function callGroq(conversationHistory) {
+  // Build Groq‑compatible messages array (OpenAI style)
   const messages = []
   // System prompt
   messages.push({ role: 'system', content: SYSTEM_PROMPT })
@@ -360,7 +360,7 @@ async function callQwen(conversationHistory) {
   }
 
   const body = {
-    model: 'qwen-turbo',
+    model: 'llama3-70b-8192',
     temperature: 0.85,
     max_tokens: 500,
     top_p: 0.9,
@@ -368,27 +368,27 @@ async function callQwen(conversationHistory) {
     messages
   }
 
-  const res = await fetch(QWEN_URL, {
+  const res = await fetch(GROQ_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${QWEN_API_KEY}`
+      'Authorization': `Bearer ${GROQ_API_KEY}`
     },
     body: JSON.stringify(body)
   })
 
   if (!res.ok) {
     const errBody = await res.text()
-    throw new Error(`Qwen ${res.status}: ${errBody}`)
+    throw new Error(`Groq ${res.status}: ${errBody}`)
   }
 
   const data = await res.json()
-  // Qwen returns { output: { choices: [{ message: { content: "..." } }] } }
-  const rawText = data?.output?.choices?.[0]?.message?.content || ''
+  // Groq returns { choices: [{ message: { content: "..." } }] }
+  const rawText = data?.choices?.[0]?.message?.content || ''
 
-  if (!rawText) throw new Error('Empty response from Qwen')
+  if (!rawText) throw new Error('Empty response from Groq')
 
-  const parsed = parseQwenResponse(rawText)
+  const parsed = parseGroqResponse(rawText)
   if (!parsed || !parsed.message) {
     // Fallback
     return {
@@ -618,7 +618,7 @@ export default function ChatbotWidget({ fullPage = false }) {
 
     setLoading(true)
     try {
-      const reply = await callQwen(newHistory)
+      const reply = await callGroq(newHistory)
 
       const botMsg = {
         from: 'bot',
@@ -630,11 +630,11 @@ export default function ChatbotWidget({ fullPage = false }) {
       setHistory(prev => [...prev, { from: 'bot', text: reply.message }])
       setLastUserMsg(null)
     } catch (err) {
-      console.error('Qwen error:', err)
+      console.error('Groq error:', err)
 
       let errMsg = 'Something went wrong. Please try again.'
       if (err.message.includes('401') || err.message.includes('403')) {
-        errMsg = 'API key invalid. Check your VITE_QWEN_API_KEY in .env'
+        errMsg = 'API key invalid. Check your VITE_GROQ_API_KEY in .env'
       } else if (err.message.includes('429')) {
         errMsg = 'Too many requests. Wait a moment and retry.'
       } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
@@ -713,7 +713,7 @@ export default function ChatbotWidget({ fullPage = false }) {
                 boxShadow: '0 0 6px #7ABF82AA'
               }} />
               <span style={{ fontSize: 11, color: '#5A7870' }}>
-                Powered by Qwen · Always here
+                Powered by Groq · Always here
               </span>
             </div>
           </div>
@@ -872,7 +872,7 @@ export default function ChatbotWidget({ fullPage = false }) {
             textAlign: 'center', fontSize: 10, color: '#B0C8BE',
             padding: '5px 0 10px', background: '#fff', flexShrink: 0
           }}>
-            Powered by Qwen (free tier) · Not a substitute for professional mental health care
+            Powered by Groq (free tier) · Not a substitute for professional mental health care
           </p>
         </>
       )}

@@ -109,11 +109,11 @@ export default function ChatbotPage() {
       const localMatch = getBotReply(msg)
       let botText = localMatch.text
       
-      const apiKey = import.meta.env.VITE_QWEN_API_KEY
+      const apiKey = import.meta.env.VITE_GROQ_API_KEY
       if (apiKey) {
         const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow-up question. Do not give medical diagnoses. User message: " + msg;
         const body = {
-          model: 'qwen-turbo',
+          model: 'llama3-70b-8192',
           temperature: 0.85,
           max_tokens: 500,
           top_p: 0.9,
@@ -123,7 +123,7 @@ export default function ChatbotPage() {
             { role: 'user', content: msg }
           ]
         };
-        const res = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
+        const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -137,10 +137,10 @@ export default function ChatbotPage() {
           const raw = data?.output?.choices?.[0]?.message?.content;
           if (raw) botText = raw;
         } else {
-          console.error('Qwen API Error:', res.status)
+          console.error('Groq API Error:', res.status)
         }
       } else {
-        console.warn("Please add VITE_QWEN_API_KEY to your frontend .env file.")
+        console.warn("Please add VITE_GROQ_API_KEY to your frontend .env file.")
       }
       
       setMsgs(p => [...p, { from: 'bot', text: botText, chips: localMatch.chips, resources: localMatch.resources }])
