@@ -113,7 +113,7 @@ export default function ChatbotPage() {
       if (apiKey) {
         const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow-up question. Do not give medical diagnoses. User message: " + msg;
         const body = {
-          model: 'llama3-70b-8192',
+          model: 'openai/gpt-oss-120b',
           temperature: 0.85,
           max_tokens: 500,
           top_p: 0.9,
