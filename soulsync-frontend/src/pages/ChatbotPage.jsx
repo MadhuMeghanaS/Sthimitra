@@ -109,25 +109,38 @@ export default function ChatbotPage() {
       const localMatch = getBotReply(msg)
       let botText = localMatch.text
       
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+      const apiKey = import.meta.env.VITE_QWEN_API_KEY
       if (apiKey) {
         const sysPrompt = "You are Sthimitra Assistant, a compassionate mental wellness AI companion. Provide a brief, empathetic response (2-3 short paragraphs max). Ask a thoughtful follow-up question. Do not give medical diagnoses. User message: " + msg;
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`, {
+        const body = {
+          model: 'qwen-turbo',
+          temperature: 0.85,
+          max_tokens: 500,
+          top_p: 0.9,
+          stream: false,
+          messages: [
+            { role: 'system', content: sysPrompt },
+            { role: 'user', content: msg }
+          ]
+        };
+        const res = await fetch('https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: sysPrompt }] }] })
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify(body)
         })
         
         if (res.ok) {
           const data = await res.json()
-          if (data.candidates && data.candidates[0].content.parts[0].text) {
-            botText = data.candidates[0].content.parts[0].text
-          }
+          const raw = data?.output?.choices?.[0]?.message?.content;
+          if (raw) botText = raw;
         } else {
-          console.error("Gemini API Error:", res.status)
+          console.error('Qwen API Error:', res.status)
         }
       } else {
-        console.warn("Please add VITE_GEMINI_API_KEY to your frontend .env file.")
+        console.warn("Please add VITE_QWEN_API_KEY to your frontend .env file.")
       }
       
       setMsgs(p => [...p, { from: 'bot', text: botText, chips: localMatch.chips, resources: localMatch.resources }])

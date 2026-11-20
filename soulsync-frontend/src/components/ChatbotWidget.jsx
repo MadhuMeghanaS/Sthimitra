@@ -145,11 +145,12 @@ import { Link } from 'react-router-dom'
 import { Send, Bot, ExternalLink, ChevronDown, ChevronUp, X, RefreshCw } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────
-//  CONFIG  —  paste your Gemini key in .env as VITE_GEMINI_API_KEY
+//  CONFIG  —  paste your Qwen API key in .env as VITE_QWEN_API_KEY
 // ─────────────────────────────────────────────────────────────
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || ""
-// ✅ NEW — working model
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${GEMINI_API_KEY}`
+const QWEN_API_KEY = import.meta.env.VITE_QWEN_API_KEY || ""
+// ✅ NEW — Qwen free‑tier endpoint (DashScope)
+const QWEN_URL = `https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation`
+
 // ─────────────────────────────────────────────────────────────
 //  SYSTEM PROMPT  — original prompt restored + relationship support added
 // ─────────────────────────────────────────────────────────────
@@ -324,7 +325,7 @@ User: "I feel stressed about exams"
 // ─────────────────────────────────────────────────────────────
 //  ROBUST JSON PARSER  — handles messy Gemini output
 // ─────────────────────────────────────────────────────────────
-function parseGeminiResponse(raw) {
+function parseQwenResponse(raw) {
   if (!raw) return null
 
   // 1. Try direct parse
@@ -347,48 +348,49 @@ function parseGeminiResponse(raw) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  CALL GEMINI
+//  CALL QWEN
 // ─────────────────────────────────────────────────────────────
-async function callGemini(conversationHistory) {
-  // Build Gemini-compatible message array
-  // Gemini requires alternating user/model turns
-  const contents = []
+async function callQwen(conversationHistory) {
+  // Build Qwen‑compatible messages array (OpenAI style)
+  const messages = []
+  // System prompt
+  messages.push({ role: 'system', content: SYSTEM_PROMPT })
   for (const msg of conversationHistory) {
-    contents.push({
-      role: msg.from === 'user' ? 'user' : 'model',
-      parts: [{ text: msg.text }]
-    })
+    messages.push({ role: msg.from === 'user' ? 'user' : 'assistant', content: msg.text })
   }
 
   const body = {
-    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-    contents,
-    generationConfig: {
-      temperature: 0.85,
-      maxOutputTokens: 500,
-      topP: 0.9,
-    }
+    model: 'qwen-turbo',
+    temperature: 0.85,
+    max_tokens: 500,
+    top_p: 0.9,
+    stream: false,
+    messages
   }
 
-  const res = await fetch(GEMINI_URL, {
+  const res = await fetch(QWEN_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${QWEN_API_KEY}`
+    },
     body: JSON.stringify(body)
   })
 
   if (!res.ok) {
     const errBody = await res.text()
-    throw new Error(`Gemini ${res.status}: ${errBody}`)
+    throw new Error(`Qwen ${res.status}: ${errBody}`)
   }
 
   const data = await res.json()
-  const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  // Qwen returns { output: { choices: [{ message: { content: "..." } }] } }
+  const rawText = data?.output?.choices?.[0]?.message?.content || ''
 
-  if (!rawText) throw new Error('Empty response from Gemini')
+  if (!rawText) throw new Error('Empty response from Qwen')
 
-  const parsed = parseGeminiResponse(rawText)
+  const parsed = parseQwenResponse(rawText)
   if (!parsed || !parsed.message) {
-    // Last resort fallback
+    // Fallback
     return {
       message: "I'm here with you 💙 Could you tell me a bit more about what's going on?",
       suggestions: []
@@ -616,7 +618,7 @@ export default function ChatbotWidget({ fullPage = false }) {
 
     setLoading(true)
     try {
-      const reply = await callGemini(newHistory)
+      const reply = await callQwen(newHistory)
 
       const botMsg = {
         from: 'bot',
@@ -628,11 +630,11 @@ export default function ChatbotWidget({ fullPage = false }) {
       setHistory(prev => [...prev, { from: 'bot', text: reply.message }])
       setLastUserMsg(null)
     } catch (err) {
-      console.error('Gemini error:', err)
+      console.error('Qwen error:', err)
 
       let errMsg = 'Something went wrong. Please try again.'
       if (err.message.includes('401') || err.message.includes('403')) {
-        errMsg = 'API key invalid. Check your VITE_GEMINI_API_KEY in .env'
+        errMsg = 'API key invalid. Check your VITE_QWEN_API_KEY in .env'
       } else if (err.message.includes('429')) {
         errMsg = 'Too many requests. Wait a moment and retry.'
       } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
@@ -711,7 +713,7 @@ export default function ChatbotWidget({ fullPage = false }) {
                 boxShadow: '0 0 6px #7ABF82AA'
               }} />
               <span style={{ fontSize: 11, color: '#5A7870' }}>
-                Powered by Gemini · Always here
+                Powered by Qwen · Always here
               </span>
             </div>
           </div>
@@ -870,7 +872,7 @@ export default function ChatbotWidget({ fullPage = false }) {
             textAlign: 'center', fontSize: 10, color: '#B0C8BE',
             padding: '5px 0 10px', background: '#fff', flexShrink: 0
           }}>
-            Powered by Google Gemini · Not a substitute for professional mental health care
+            Powered by Qwen (free tier) · Not a substitute for professional mental health care
           </p>
         </>
       )}
