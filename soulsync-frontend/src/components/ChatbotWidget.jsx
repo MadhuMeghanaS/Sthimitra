@@ -360,7 +360,7 @@ async function callGroq(conversationHistory) {
   }
 
   const body = {
-    model: 'llama-3.1-8b-instant',
+    model: 'openai/gpt-oss-120b',
     temperature: 0.85,
     max_tokens: 500,
     top_p: 0.9,
